@@ -1,67 +1,58 @@
 use std::io;
 
-fn format_and_join(input: &str) -> String {
-    let formatted = format!("^{}$", input);
+fn transform(string: &str) -> Vec<u8> {
+    let len_string = string.len();
 
-    // Use fold to intersperse '#' between characters
-    formatted.chars().fold(String::new(), |mut acc, c| {
-        if !acc.is_empty() {
-            acc.push('#');
-        }
-        acc.push(c);
-        acc
-    })
+    let mut transformed_vector = Vec::with_capacity(2 * len_string + 3);
+    transformed_vector.push(b'^');
+    transformed_vector.push(b'#');
+    for byte in string.as_bytes() {
+        transformed_vector.push(*byte);
+        transformed_vector.push(b'#');
+    }
+    transformed_vector.push(b'$');
+    transformed_vector
 }
 
 fn main() {
+    // Read input
     let mut user_input: String = String::new();
 
     io::stdin()
         .read_line(&mut user_input)
         .expect("Failed to read line");
-
-    // Apply format_and_join to the input string
-    let transformed = format_and_join(&user_input);
-
+    // Transform input to format
+    let transformed = transform(&user_input);
     // Initialize variables
     let length = transformed.len();
-    let mut palindrome_lengths: Vec<i32> = vec![0; length]; // Vector to store palindrome lengths
-    let (mut center, mut right_boundary) = (0, 0); // Center and right boundary of the current palindrome
-
-    // Iterate over the characters of the transformed string
+    let mut palindrome_lengths = vec![0; length];
+    let (mut center, mut right_boundary) = (0, 0);
+    //Manacher's algorithm
     for current_index in 1..length - 1 {
-        if right_boundary > current_index {
-            palindrome_lengths[current_index] = (right_boundary - current_index).min(palindrome_lengths[2 * center - current_index] as usize) as i32;
+        //let mirror = 2 * center - current_index;
+        if current_index < right_boundary {
+            palindrome_lengths[current_index] = usize::min(right_boundary - current_index, palindrome_lengths[2 * center - current_index]);
         }
-
-        // Expand the palindrome centered at current_index
-        while ((current_index + 1 + palindrome_lengths[current_index] as usize) < length)
-            && (current_index >= 1 + palindrome_lengths[current_index] as usize)
-            && (transformed.chars().nth(current_index + 1 + palindrome_lengths[current_index] as usize) == transformed.chars().nth(current_index - 1 - palindrome_lengths[current_index] as usize))
-        {
+        while transformed[current_index + 1 + palindrome_lengths[current_index]] == transformed[current_index - 1 - palindrome_lengths[current_index]] {
             palindrome_lengths[current_index] += 1;
         }
 
-        // Adjust the center and right boundary if necessary
-        if current_index + palindrome_lengths[current_index] as usize > right_boundary {
+        if current_index + palindrome_lengths[current_index] > right_boundary {
             center = current_index;
-            right_boundary = current_index + palindrome_lengths[current_index] as usize;
+            right_boundary = current_index + palindrome_lengths[current_index];
         }
     }
-
-    // Find the longest palindrome in the original string
-    let (mut max_length, mut center_index) = (0, 0);
-    for current_index in 1..length - 1 {
-        if palindrome_lengths[current_index] > max_length {
-            max_length = palindrome_lengths[current_index];
-            center_index = current_index;
+    // Find longest palindrome
+    let (max_len, center_index) = palindrome_lengths.iter().enumerate().fold((0, 0), |acc, (i, &len)| {
+        if len > acc.0 {
+            (len, i)
+        } else {
+            acc
         }
-    }
+    });
+    // Print longest palindrome
+    let start = (center_index - max_len) / 2;
 
-    // Extract the longest palindrome substring from the original input
-    let start_index = (center_index - max_length as usize) / 2;
-    let end_index = start_index + max_length as usize;
-    let longest_palindrome = &user_input[start_index..end_index];
+    println!("{}", &user_input[start..start + max_len as usize]);
 
-    println!("{}", longest_palindrome);
 }
