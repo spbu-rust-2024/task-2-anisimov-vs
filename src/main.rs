@@ -77,5 +77,7 @@ fn main() {
     let (max_len, center_index) = longest_palindrome(&palindrome_lengths);
     // Print longest palindrome
     let start = (center_index - max_len) / 2;
-    println!("{}", &user_input[start..start + max_len as usize]);
+    let end = start + max_len;
+    let longest_palindrome_str = &user_input[start..end];
+    println!("{}", longest_palindrome_str);
 }
