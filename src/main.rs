@@ -5,12 +5,12 @@ fn transform(string: &str) -> Vec<u8> {
 
     let mut transformed_vector = Vec::with_capacity(2 * len_string + 3); // 2 * n + 3 because we adding 2n+1 '#' and one '^' and '$' each
     transformed_vector.push(b'^');
-    transformed_vector.push(b'^');
+    transformed_vector.push(b'#');
     for byte in string.as_bytes() {
         transformed_vector.push(*byte);
-        transformed_vector.push(b'^');
+        transformed_vector.push(b'#');
     }
-    transformed_vector.push(b'^');
+    transformed_vector.push(b'$');
     transformed_vector
 }
 
